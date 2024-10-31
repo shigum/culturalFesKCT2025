@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 
 public class ServerManager : MonoBehaviour
@@ -12,18 +13,21 @@ public class ServerManager : MonoBehaviour
     private Thread serverThread;
     private CancellationTokenSource cancellationTokenSource;
 
-    public string ip = "10.202.227.43"; //192.168.3.13, 10.202.227.43
+    public string ip = "10.202.253.246"; //192.168.3.13, 10.202.227.43, 10.202.253.246
     public int port = 8080;
 
-    private bool isFirst;
-    public GameObject connectingPanel;
+    public GameManager gameManager;
+    public Sprite gameStartSprite;
+    public Sprite gameOverSprite;
+    public Sprite gameClearSprite;
+    public GameObject mainImage;
 
     // メインスレッドで実行するアクションを保持するキュー
     private Queue<Action> mainThreadActions = new Queue<Action>();
 
     public void StartServer()
     {   
-        isFirst = true;
+        //isFirst = true;
         server = new TcpListener(IPAddress.Parse(ip), port);
         cancellationTokenSource = new CancellationTokenSource();
         serverThread = new Thread(() => ListenForClients(cancellationTokenSource.Token));
@@ -52,7 +56,7 @@ public class ServerManager : MonoBehaviour
                 if(server.Pending())
                 {
                     TcpClient client = server.AcceptTcpClient();
-                    HandleClient(client, isFirst);
+                    HandleClient(client);
                 }
                 else
                 {
@@ -66,50 +70,57 @@ public class ServerManager : MonoBehaviour
         }
     }
 
-    private void HandleClient(TcpClient client, bool isFirst)
+
+
+    private void HandleClient(TcpClient client)
     {
-        if(isFirst)
-        {
-            Debug.Log("Client connected");
-
-            // メインスレッドに戻るアクションをキューに追加
-            mainThreadActions.Enqueue(() =>
-            {
-                connectingPanel.SetActive(false);
-
-                // クライアントに応答を送信
-                using (NetworkStream stream = client.GetStream())
-                {
-                    byte[] response = Encoding.UTF8.GetBytes("Hello from Unity");
-                    stream.Write(response, 0, response.Length);
-                }
-            });
-        }
         using (NetworkStream stream = client.GetStream())
         {
             byte[] buffer = new byte[1024];
             int bytesRead = stream.Read(buffer, 0, buffer.Length);
-            string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            Debug.Log($"Received message: {message}");
-            if(message == "-10")
-            {
-                Debug.Log("クライアントとの通信を終了しました");
-                client.Close();
-                Stop();
-            }
 
-            if(isFirst)
+            if (bytesRead > 0)
             {
-                isFirst = false;
-                connectingPanel.SetActive(false);
+                string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                Debug.Log($"Received message: {message}");
+
+                if (message == "-5")
+                {
+                    //メインスレッドに戻るアクションをキューに追加->
+                    mainThreadActions.Enqueue(() =>
+                    {
+                        gameManager.TimerStart();
+                    });
+                }
+                else if (message == "-6")
+                {
+                    gameManager.isBlotting = true;
+                }
+                else if (message == "-10")
+                {
+                    Debug.Log("Communication with client terminated");
+                    gameManager.gameClear();
+                }
+                else if (int.TryParse(message, out int s) && s > 0)
+                {
+                    gameManager.isBlotting = false;
+                    gameManager.subjugation_num = s;
+                    if (s >= 5) gameManager.gameClear();
+                }
 
                 // クライアントに応答を送信
-                byte[] response = Encoding.UTF8.GetBytes("Hello from Unity");
+                byte[] response = Encoding.UTF8.GetBytes("Unity is received message!");
                 stream.Write(response, 0, response.Length);
+                
             }
         }
-        //client.Close();
+
+        // 通信後にクライアントの接続を閉じる
+        client.Close();
     }
+
+
+
 
     public void Stop()
     {
@@ -118,4 +129,6 @@ public class ServerManager : MonoBehaviour
         serverThread.Join(); // サーバースレッドが終了するのを待つ
         Debug.Log("Server stopped");
     }
+
+    
 }

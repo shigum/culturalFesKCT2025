@@ -28,12 +28,12 @@ public class LoginManager : MonoBehaviour
     [SerializeField]
     private InputField inputFieldTime; //残り時間(s)
     
-    public void OnClickUpdateRanking()
+    public void UpdateRanking(int score, int time)
     {
-        if(inputFieldNickname.text != "" && inputFieldScore.text != "" && inputFieldTime.text != "")
+        if(inputFieldNickname.text != "")
         {
             PlayerName = inputFieldNickname.text;
-            UpdateRanking(inputFieldNickname.text, int.Parse(inputFieldScore.text), int.Parse(inputFieldTime.text));
+            UpdateRanking(inputFieldNickname.text, score, time);
         }
     }
 

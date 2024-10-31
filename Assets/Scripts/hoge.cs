@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class hoge : MonoBehaviour
 {
+    /*
     public GameManager gameManager;
 
     // Start is called before the first frame update
@@ -21,4 +22,5 @@ public class hoge : MonoBehaviour
             this.gameObject.SetActive(false);
         } 
     }
+    */
 }
