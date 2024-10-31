@@ -5,21 +5,20 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    public GameObject tutorialPanel;
+    public GameObject timerPanel;
+    public GameObject inputNicknamePanel;
     public InputField inputFieldNickname;
+
     public ServerManager serverManager;
     public LoginManager loginManager;
-    public GameObject inputNicknamePanel;
-    
-    //public GameObject connectingPanel; //後で消す
-    //public bool isConnectingPanel;
-    public GameObject tutorialPanel;
-    public GameObject timerPanel; //後で消す
 
+    public GameObject mainImage;
     public Sprite gameStartSprite;
     public Sprite gameOverSprite;
     public Sprite gameClearSprite;
-    public GameObject mainImage;
 
+    //タイマー
     public Text txt_m;
     public Text txt_s;
     public bool isTimerStart;
@@ -28,14 +27,11 @@ public class GameManager : MonoBehaviour
     public Text subjugationText;
     public int subjugation_num;
 
-    public bool isBlotting;
+    public bool isBlotting; //吸い取り中か判定
 
     public void Start()
     {
         inputNicknamePanel.SetActive(true);
-
-        //isConnectingPanel = true;
-        //connectingPanel.SetActive(true);
         tutorialPanel.SetActive(false);
 
         isTimerStart = false;
@@ -48,15 +44,6 @@ public class GameManager : MonoBehaviour
 
     public void Update()
     {
-        /*
-        if(Input.GetKeyDown(KeyCode.Space) && isConnectingPanel)
-        {
-            isConnectingPanel = false;
-            connectingPanel.SetActive(false);
-            tutorialPanel.SetActive(true);
-        }
-        */
-
         if(isTimerStart)
         {
             currentTime -= Time.deltaTime;
@@ -64,7 +51,6 @@ public class GameManager : MonoBehaviour
             {
                 currentTime = 0f;
                 if(!isBlotting) TimeOver();
-                //timerPanel.SetActive(false);
             } 
             int i = (int)currentTime;
             int m = i / 60;
@@ -91,12 +77,13 @@ public class GameManager : MonoBehaviour
         isTimerStart = false;
         mainImage.SetActive(true);
         mainImage.GetComponent<Image>().sprite = gameOverSprite;
-        Invoke("hoge", 2.0f);
+        Invoke("GaRanking", 2.0f);
     }
 
-    private void hoge()
+    private void GoRanking()
     {
-        loginManager.UpdateRanking(5 - subjugation_num, (int)currentTime);
+        timerPanel.SetActive(false);
+        loginManager.StartRanking(5 - subjugation_num, (int)currentTime);
     }
 
     public void gameClear()
@@ -104,7 +91,7 @@ public class GameManager : MonoBehaviour
         isTimerStart = false;
         mainImage.SetActive(true);
         mainImage.GetComponent<Image>().sprite = gameClearSprite;
-        Invoke("hoge", 2.0f);
+        Invoke("GoRanking", 2.0f);
     }
 
     public void TimerStart()
@@ -120,5 +107,21 @@ public class GameManager : MonoBehaviour
     public void InactiveSprite()
     {
         mainImage.SetActive(false);
+    }
+
+    public void Subjugate(int s)
+    {
+        if(s > 0)
+        {
+            isBlotting = false;
+            subjugation_num = s;
+            subjugationText.text = (5 - subjugation_num).ToString();
+            if(s >= 5) gameClear();
+        }
+    }
+
+    public void Blotting()
+    {
+        isBlotting = true;
     }
 }

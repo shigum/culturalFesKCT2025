@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using PlayFab;
 using PlayFab.ClientModels;
-using UnityEngine.UI;
 
 public class LoginManager : MonoBehaviour
 {
@@ -23,18 +23,19 @@ public class LoginManager : MonoBehaviour
 
     [SerializeField]
     private InputField inputFieldNickname; //ニックネーム
-    [SerializeField]
-    private InputField inputFieldScore; //討伐数
-    [SerializeField]
-    private InputField inputFieldTime; //残り時間(s)
     
-    public void UpdateRanking(int score, int time)
+    public void StartRanking(int score, int time) //ランキングにデータを送る
     {
         if(inputFieldNickname.text != "")
         {
             PlayerName = inputFieldNickname.text;
             UpdateRanking(inputFieldNickname.text, score, time);
         }
+    }
+
+    private string CreateNewPlayerId()
+    {
+        return System.Guid.NewGuid().ToString("N");
     }
 
     public void UpdateRanking(string userName, int score, int time)
@@ -115,11 +116,12 @@ public class LoginManager : MonoBehaviour
         PlayFabClientAPI.GetLeaderboard(new GetLeaderboardRequest
         {
             StatisticName = "Subjugation"
-        }, result =>
+        }, 
+        (result) =>
         {
             //1～10位までを配列に代入 & プレイヤーの順位を検索
             int i = 0;
-            foreach (var item in result.Leaderboard)
+            foreach(var item in result.Leaderboard)
             {
                 if(0 <= i && i <= 9) rankingDatas[i] = new rankingData(item.DisplayName, item.StatValue);
                 if(PlayerName == item.DisplayName)
@@ -133,14 +135,10 @@ public class LoginManager : MonoBehaviour
             {
                 Debug.Log($"{j + 1}位:{rankingDatas[j].displayName} " + $"スコア {rankingDatas[j].statValue}");
             }
-        }, error =>
+        }, 
+        (error) =>
         {
             Debug.Log(error.GenerateErrorReport());
         });
-    }
-
-    private string CreateNewPlayerId()
-    {
-        return System.Guid.NewGuid().ToString("N");
     }
 }

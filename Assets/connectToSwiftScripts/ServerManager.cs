@@ -3,9 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ServerManager : MonoBehaviour
 {
@@ -17,17 +16,12 @@ public class ServerManager : MonoBehaviour
     public int port = 8080;
 
     public GameManager gameManager;
-    public Sprite gameStartSprite;
-    public Sprite gameOverSprite;
-    public Sprite gameClearSprite;
-    public GameObject mainImage;
 
     // メインスレッドで実行するアクションを保持するキュー
     private Queue<Action> mainThreadActions = new Queue<Action>();
 
     public void StartServer()
     {   
-        //isFirst = true;
         server = new TcpListener(IPAddress.Parse(ip), port);
         cancellationTokenSource = new CancellationTokenSource();
         serverThread = new Thread(() => ListenForClients(cancellationTokenSource.Token));
@@ -38,18 +32,18 @@ public class ServerManager : MonoBehaviour
     public void Update()
     {
         // キューに溜まったアクションを実行
-        while (mainThreadActions.Count > 0)
+        while(mainThreadActions.Count > 0)
         {
             mainThreadActions.Dequeue().Invoke();
         }
 
-        if(Input.GetKeyDown(KeyCode.Return)) Stop();
+        //if(Input.GetKeyDown(KeyCode.Return)) Stop();
     }
 
     private void ListenForClients(CancellationToken cancellationToken)
     {
         server.Start();
-        while (!cancellationToken.IsCancellationRequested)
+        while(!cancellationToken.IsCancellationRequested)
         {
             try
             {
@@ -63,14 +57,12 @@ public class ServerManager : MonoBehaviour
                     Thread.Sleep(100);
                 }
             }
-            catch (SocketException e)
+            catch(SocketException e)
             {
                 Debug.LogError($"Socket Exceptions: {e.Message}");
             }
         }
     }
-
-
 
     private void HandleClient(TcpClient client)
     {
@@ -79,39 +71,35 @@ public class ServerManager : MonoBehaviour
             byte[] buffer = new byte[1024];
             int bytesRead = stream.Read(buffer, 0, buffer.Length);
 
-            if (bytesRead > 0)
+            if(bytesRead > 0)
             {
                 string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                 Debug.Log($"Received message: {message}");
 
-                if (message == "-5")
+                if(message == "-5")
                 {
-                    //メインスレッドに戻るアクションをキューに追加->
+                    //メインスレッドに戻るアクションをキューに追加->いらないかも
                     mainThreadActions.Enqueue(() =>
                     {
-                        gameManager.TimerStart();
+                        gameManager.TimerStart(); //タイマースタート
                     });
                 }
-                else if (message == "-6")
+                else if(message == "-6")
                 {
-                    gameManager.isBlotting = true;
+                    gameManager.Blotting(); //吸い取り中
                 }
-                else if (message == "-10")
+                else if(message == "-10")
                 {
-                    Debug.Log("Communication with client terminated");
-                    gameManager.gameClear();
+                    gameManager.gameClear(); //ゲームクリア
                 }
-                else if (int.TryParse(message, out int s) && s > 0)
+                else if(int.TryParse(message, out int s))
                 {
-                    gameManager.isBlotting = false;
-                    gameManager.subjugation_num = s;
-                    if (s >= 5) gameManager.gameClear();
+                    gameManager.Subjugate(s); //お化けを1体討伐
                 }
 
                 // クライアントに応答を送信
                 byte[] response = Encoding.UTF8.GetBytes("Unity is received message!");
                 stream.Write(response, 0, response.Length);
-                
             }
         }
 
@@ -119,16 +107,11 @@ public class ServerManager : MonoBehaviour
         client.Close();
     }
 
-
-
-
     public void Stop()
     {
-        cancellationTokenSource.Cancel(); // スレッドに停止を指示
+        cancellationTokenSource.Cancel(); //スレッドに停止を指示
         server.Stop();
-        serverThread.Join(); // サーバースレッドが終了するのを待つ
+        serverThread.Join(); //サーバースレッドが終了するのを待つ
         Debug.Log("Server stopped");
     }
-
-    
 }
