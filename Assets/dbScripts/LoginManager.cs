@@ -21,6 +21,9 @@ public class LoginManager : MonoBehaviour
 
     public string PlayerName = "";
 
+    public Text text1;
+
+
     [SerializeField]
     private InputField inputFieldNickname; //ニックネーム
     
@@ -121,21 +124,31 @@ public class LoginManager : MonoBehaviour
         {
             //1～10位までを配列に代入 & プレイヤーの順位を検索
             int i = 0;
-            foreach(var item in result.Leaderboard)
+            foreach (var item in result.Leaderboard)
             {
-                if(0 <= i && i <= 9) rankingDatas[i] = new rankingData(item.DisplayName, item.StatValue);
-                if(PlayerName == item.DisplayName)
+                if (0 <= i && i <= 9) rankingDatas[i] = new rankingData(item.DisplayName, item.StatValue);
+                if (PlayerName == item.DisplayName)
                 {
                     Debug.Log(PlayerName + "'s ranking is " + (i + 1).ToString() + "!!");
                 }
                 i++;
             }
             //1～10位までのプレイヤーを表示
-            for(int j = 0; j < 10;j++)
+            for (int j = 0; j < 10; j++)
             {
                 Debug.Log($"{j + 1}位:{rankingDatas[j].displayName} " + $"スコア {rankingDatas[j].statValue}");
             }
-        }, 
+            test1.text = $"{1}位:{rankingDatas[1].displayName} " + $"スコア {rankingDatas[1].statValue}"
+            test2.text = $"{2}位:{rankingDatas[2].displayName} " + $"スコア {rankingDatas[2].statValue}"
+            test3.text = $"{3}位:{rankingDatas[3].displayName} " + $"スコア {rankingDatas[3].statValue}"
+            test4.text = $"{4}位:{rankingDatas[4].displayName} " + $"スコア {rankingDatas[4].statValue}"
+            test5.text = $"{5}位:{rankingDatas[5].displayName} " + $"スコア {rankingDatas[5].statValue}"
+            test6.text = $"{6}位:{rankingDatas[6].displayName} " + $"スコア {rankingDatas[6].statValue}"
+            test7.text = $"{7}位:{rankingDatas[7].displayName} " + $"スコア {rankingDatas[7].statValue}"
+            test8.text = $"{8}位:{rankingDatas[8].displayName} " + $"スコア {rankingDatas[8].statValue}"
+            test9.text = $"{9}位:{rankingDatas[9].displayName} " + $"スコア {rankingDatas[9].statValue}"
+            test10.text = $"{10}位:{rankingDatas[10].displayName} " + $"スコア {rankingDatas[10].statValue}"
+         }, 
         (error) =>
         {
             Debug.Log(error.GenerateErrorReport());
