@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour
     public Text txt_m;
     public Text txt_s;
     public bool isTimerStart;
-    public float currentTime = 180f; //現在の時間
+    public float currentTime; //現在の時間
 
     public Text subjugationText;
     public int subjugation_num;
@@ -72,28 +72,6 @@ public class GameManager : MonoBehaviour
         } 
     }
 
-    public void TimeOver()
-    {
-        isTimerStart = false;
-        mainImage.SetActive(true);
-        mainImage.GetComponent<Image>().sprite = gameOverSprite;
-        Invoke("GaRanking", 2.0f);
-    }
-
-    private void GoRanking()
-    {
-        timerPanel.SetActive(false);
-        loginManager.StartRanking(5 - subjugation_num, (int)currentTime);
-    }
-
-    public void gameClear()
-    {
-        isTimerStart = false;
-        mainImage.SetActive(true);
-        mainImage.GetComponent<Image>().sprite = gameClearSprite;
-        Invoke("GoRanking", 2.0f);
-    }
-
     public void TimerStart()
     {
         tutorialPanel.SetActive(false);
@@ -107,6 +85,28 @@ public class GameManager : MonoBehaviour
     public void InactiveSprite()
     {
         mainImage.SetActive(false);
+    }
+
+    public void gameClear()
+    {
+        isTimerStart = false;
+        mainImage.SetActive(true);
+        mainImage.GetComponent<Image>().sprite = gameClearSprite;
+        Invoke("GoRanking", 2.0f);
+    }
+
+    public void TimeOver()
+    {
+        isTimerStart = false;
+        mainImage.SetActive(true);
+        mainImage.GetComponent<Image>().sprite = gameOverSprite;
+        Invoke("GaRanking", 2.0f);
+    }
+
+    private void GoRanking()
+    {
+        timerPanel.SetActive(false);
+        loginManager.StartRanking(subjugation_num, (int)currentTime);
     }
 
     public void Subjugate(int s)

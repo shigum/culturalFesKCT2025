@@ -15,6 +15,8 @@ public class ServerManager : MonoBehaviour
     public string ip = "10.202.253.246"; //192.168.3.13, 10.202.227.43, 10.202.253.246
     public int port = 8080;
 
+    public bool isEnd = false;
+
     public GameManager gameManager;
 
     // メインスレッドで実行するアクションを保持するキュー
@@ -64,6 +66,7 @@ public class ServerManager : MonoBehaviour
         }
     }
 
+    /*
     private void HandleClient(TcpClient client)
     {
         using (NetworkStream stream = client.GetStream())
@@ -90,6 +93,8 @@ public class ServerManager : MonoBehaviour
                 }
                 else if(message == "-10")
                 {
+                    isEnd = true;
+                    client.Close();
                     gameManager.gameClear(); //ゲームクリア
                 }
                 else if(int.TryParse(message, out int s))
@@ -100,12 +105,71 @@ public class ServerManager : MonoBehaviour
                 // クライアントに応答を送信
                 byte[] response = Encoding.UTF8.GetBytes("Unity is received message!");
                 stream.Write(response, 0, response.Length);
+
+                if(!isEnd) StartServer();
             }
         }
 
         // 通信後にクライアントの接続を閉じる
         client.Close();
     }
+    */
+
+
+    private void HandleClient(TcpClient client)
+    {
+        using (NetworkStream stream = client.GetStream())
+        {
+            while (true) // クライアントとの通信を繰り返す
+            {
+                byte[] buffer = new byte[1024];
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+
+                if (bytesRead > 0)
+                {
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    Debug.Log($"Received message: {message}");
+                    /*
+                    if(message == "-4") 
+                    {
+                        client.Close();
+                        StartServer();
+                    }
+                    */
+                    if (message == "-5")
+                    {
+                        mainThreadActions.Enqueue(() => gameManager.TimerStart());
+                    }
+                    else if (message == "-6")
+                    {
+                        gameManager.Blotting();
+                    }
+                    else if (message == "-10")
+                    {
+                        isEnd = true;
+                        client.Close();
+                        gameManager.gameClear();
+                        break; // 通信終了
+                    }
+                    else if (int.TryParse(message, out int s))
+                    {
+                        gameManager.Subjugate(s);
+                    }
+
+                    byte[] response = Encoding.UTF8.GetBytes("Unity received your message!");
+                    stream.Write(response, 0, response.Length);
+                    //if(!isEnd) StartServer();
+                }
+                else
+                {
+                    // クライアントが接続を閉じた場合
+                    break;
+                }
+            }
+        }
+    }
+    
+
 
     public void Stop()
     {
