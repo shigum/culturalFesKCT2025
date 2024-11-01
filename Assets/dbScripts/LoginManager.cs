@@ -20,9 +20,16 @@ public class LoginManager : MonoBehaviour
     rankingData[] rankingDatas = new rankingData[10];
 
     public string PlayerName = "";
-
     public Text text1;
-
+    public Text text2;
+    public Text text3;
+    public Text text4;
+    public Text text5;
+    public Text text6;
+    public Text text7;
+    public Text text8;
+    public Text text9;
+    public Text text10;
 
     [SerializeField]
     private InputField inputFieldNickname; //ニックネーム
@@ -138,16 +145,16 @@ public class LoginManager : MonoBehaviour
             {
                 Debug.Log($"{j + 1}位:{rankingDatas[j].displayName} " + $"スコア {rankingDatas[j].statValue}");
             }
-            test1.text = $"{1}位:{rankingDatas[1].displayName} " + $"スコア {rankingDatas[1].statValue}"
-            test2.text = $"{2}位:{rankingDatas[2].displayName} " + $"スコア {rankingDatas[2].statValue}"
-            test3.text = $"{3}位:{rankingDatas[3].displayName} " + $"スコア {rankingDatas[3].statValue}"
-            test4.text = $"{4}位:{rankingDatas[4].displayName} " + $"スコア {rankingDatas[4].statValue}"
-            test5.text = $"{5}位:{rankingDatas[5].displayName} " + $"スコア {rankingDatas[5].statValue}"
-            test6.text = $"{6}位:{rankingDatas[6].displayName} " + $"スコア {rankingDatas[6].statValue}"
-            test7.text = $"{7}位:{rankingDatas[7].displayName} " + $"スコア {rankingDatas[7].statValue}"
-            test8.text = $"{8}位:{rankingDatas[8].displayName} " + $"スコア {rankingDatas[8].statValue}"
-            test9.text = $"{9}位:{rankingDatas[9].displayName} " + $"スコア {rankingDatas[9].statValue}"
-            test10.text = $"{10}位:{rankingDatas[10].displayName} " + $"スコア {rankingDatas[10].statValue}"
+            text1.text = $"{1}位:{rankingDatas[1].displayName} " + $"スコア {rankingDatas[1].statValue}";
+            text2.text = $"{2}位:{rankingDatas[2].displayName} " + $"スコア {rankingDatas[2].statValue}";
+            text3.text = $"{3}位:{rankingDatas[3].displayName} " + $"スコア {rankingDatas[3].statValue}";
+            text4.text = $"{4}位:{rankingDatas[4].displayName} " + $"スコア {rankingDatas[4].statValue}";
+            text5.text = $"{5}位:{rankingDatas[5].displayName} " + $"スコア {rankingDatas[5].statValue}";
+            text6.text = $"{6}位:{rankingDatas[6].displayName} " + $"スコア {rankingDatas[6].statValue}";
+            text7.text = $"{7}位:{rankingDatas[7].displayName} " + $"スコア {rankingDatas[7].statValue}";
+            text8.text = $"{8}位:{rankingDatas[8].displayName} " + $"スコア {rankingDatas[8].statValue}";
+            text9.text = $"{9}位:{rankingDatas[9].displayName} " + $"スコア {rankingDatas[9].statValue}";
+            text10.text = $"{10}位:{rankingDatas[10].displayName} " + $"スコア {rankingDatas[10].statValue}";
          }, 
         (error) =>
         {
