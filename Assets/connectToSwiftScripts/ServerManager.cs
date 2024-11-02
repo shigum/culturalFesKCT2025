@@ -146,8 +146,8 @@ public class ServerManager : MonoBehaviour
                     }
                     else if (message == "-10")
                     {
-                        isEnd = true;
-                        client.Close();
+                        //isEnd = true;
+                        //client.Close(); ????
                         gameManager.gameClear();
                         break; // 通信終了
                     }

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -29,6 +30,10 @@ public class GameManager : MonoBehaviour
 
     public bool isBlotting; //吸い取り中か判定
 
+    public bool isRanking;
+    public GameObject yourRankingImage;
+    public bool isRanking2;
+
     public void Start()
     {
         inputNicknamePanel.SetActive(true);
@@ -40,6 +45,10 @@ public class GameManager : MonoBehaviour
         currentTime = 180f;
         subjugation_num = 0;
         subjugationText.text = (5 - subjugation_num).ToString();
+
+        isRanking = false;
+        yourRankingImage.SetActive(true);
+        isRanking2 = false;
     }
 
     public void Update()
@@ -58,6 +67,17 @@ public class GameManager : MonoBehaviour
             int s2 = (i % 60) % 10;
             txt_m.text = m.ToString();
             txt_s.text = s1.ToString() + " " + s2.ToString();
+        }
+        if(isRanking && Input.GetKeyDown(KeyCode.Return))
+        {
+            isRanking = false;
+            yourRankingImage.SetActive(false);
+            isRanking2 = true;
+        }
+        if(isRanking2 && Input.GetKeyDown(KeyCode.Return))
+        {
+            isRanking2 = false;
+            SceneManager.LoadScene("main");
         }
     }
 
@@ -106,6 +126,7 @@ public class GameManager : MonoBehaviour
     private void GoRanking()
     {
         timerPanel.SetActive(false);
+        isRanking = true;
         loginManager.StartRanking(subjugation_num, (int)currentTime);
     }
 

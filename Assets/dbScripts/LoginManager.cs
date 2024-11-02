@@ -31,6 +31,8 @@ public class LoginManager : MonoBehaviour
     public Text text9;
     public Text text10;
 
+    public Text yourNametext;
+
     [SerializeField]
     private InputField inputFieldNickname; //ニックネーム
     
@@ -137,6 +139,7 @@ public class LoginManager : MonoBehaviour
                 if (PlayerName == item.DisplayName)
                 {
                     Debug.Log(PlayerName + "'s ranking is " + (i + 1).ToString() + "!!");
+                    yourNametext.text = "あなたの順位は" + (i + 1).ToString() + "位です";
                 }
                 i++;
             }
