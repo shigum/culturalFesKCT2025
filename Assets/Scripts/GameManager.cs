@@ -32,23 +32,39 @@ public class GameManager : MonoBehaviour
 
     public bool isRanking;
     public GameObject yourRankingImage;
+
+    public GameObject inputImage;
     public bool isRanking2;
+
+    AudioSource audioSource;
+    public AudioClip gameStartSound;
+    public AudioClip m2Sound;
+    public AudioClip m1Sound;
+    public AudioClip gameClearSound;
+    public AudioClip timeOverSound;
+    public bool ism2;
+    public bool ism1;
 
     public void Start()
     {
         inputNicknamePanel.SetActive(true);
         tutorialPanel.SetActive(false);
+        timerPanel.SetActive(false);
 
         isTimerStart = false;
         isBlotting = false;
 
-        currentTime = 180f;
+        currentTime = 300f;
         subjugation_num = 0;
         subjugationText.text = (5 - subjugation_num).ToString();
 
         isRanking = false;
         yourRankingImage.SetActive(true);
         isRanking2 = false;
+
+        audioSource = GetComponent<AudioSource>();
+        ism1 = true;
+        ism2 = true;
     }
 
     public void Update()
@@ -60,7 +76,17 @@ public class GameManager : MonoBehaviour
             {
                 currentTime = 0f;
                 if(!isBlotting) TimeOver();
-            } 
+            }
+            else if(currentTime < 60 && ism1)
+            {
+                ism1 = false;
+                audioSource.PlayOneShot(m1Sound);
+            }
+            else if(currentTime < 120 && ism2)
+            {
+                ism2 = false;
+                audioSource.PlayOneShot(m2Sound);
+            }
             int i = (int)currentTime;
             int m = i / 60;
             int s1 = (i % 60) / 10;
@@ -74,7 +100,7 @@ public class GameManager : MonoBehaviour
             yourRankingImage.SetActive(false);
             isRanking2 = true;
         }
-        if(isRanking2 && Input.GetKeyDown(KeyCode.Return))
+        if(isRanking2 && Input.GetKeyDown(KeyCode.Escape))
         {
             isRanking2 = false;
             SceneManager.LoadScene("main");
@@ -99,6 +125,7 @@ public class GameManager : MonoBehaviour
         isTimerStart = true;
         mainImage.SetActive(true);
         mainImage.GetComponent<Image>().sprite = gameStartSprite;
+        audioSource.PlayOneShot(gameStartSound);
         Invoke("InactiveSprite", 2.0f);
     }
 
@@ -112,6 +139,7 @@ public class GameManager : MonoBehaviour
         isTimerStart = false;
         mainImage.SetActive(true);
         mainImage.GetComponent<Image>().sprite = gameClearSprite;
+        audioSource.PlayOneShot(gameClearSound);
         Invoke("GoRanking", 2.0f);
     }
 
@@ -120,6 +148,7 @@ public class GameManager : MonoBehaviour
         isTimerStart = false;
         mainImage.SetActive(true);
         mainImage.GetComponent<Image>().sprite = gameOverSprite;
+        audioSource.PlayOneShot(timeOverSound);
         Invoke("GaRanking", 2.0f);
     }
 

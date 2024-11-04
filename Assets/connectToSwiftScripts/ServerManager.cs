@@ -115,7 +115,7 @@ public class ServerManager : MonoBehaviour
     }
     */
 
-
+/*
     private void HandleClient(TcpClient client)
     {
         using (NetworkStream stream = client.GetStream())
@@ -129,13 +129,7 @@ public class ServerManager : MonoBehaviour
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     Debug.Log($"Received message: {message}");
-                    /*
-                    if(message == "-4") 
-                    {
-                        client.Close();
-                        StartServer();
-                    }
-                    */
+                    
                     if (message == "-5")
                     {
                         mainThreadActions.Enqueue(() => gameManager.TimerStart());
@@ -168,8 +162,43 @@ public class ServerManager : MonoBehaviour
             }
         }
     }
+*/
     
 
+    private void HandleClient(TcpClient client)
+    {
+        using (NetworkStream stream = client.GetStream())
+        {
+            while (true) // クライアントとの通信を繰り返す
+            {
+                byte[] buffer = new byte[1024];
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+
+                if (bytesRead > 0)
+                {
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    Debug.Log($"Received message: {message}");
+
+                    if (message == "-5")
+                    {
+                        mainThreadActions.Enqueue(() => gameManager.TimerStart()); // メインスレッドに戻る
+                    }
+                    else if (int.TryParse(message, out int s))
+                    {
+                        mainThreadActions.Enqueue(() => gameManager.Subjugate(s)); // メインスレッドに戻る
+                    }
+
+                    byte[] response = Encoding.UTF8.GetBytes("Unity received your message!");
+                    stream.Write(response, 0, response.Length);
+                }
+                else
+                {
+                    // クライアントが接続を閉じた場合
+                    break;
+                }
+            }
+        }
+    }
 
     public void Stop()
     {
@@ -179,3 +208,18 @@ public class ServerManager : MonoBehaviour
         Debug.Log("Server stopped");
     }
 }
+
+/*
+else if (message == "-6")
+{
+    mainThreadActions.Enqueue(() => gameManager.Blotting()); // メインスレッドに戻る
+}
+*/
+
+/*
+else if (message == "-10")
+{
+    mainThreadActions.Enqueue(() => gameManager.gameClear()); // メインスレッドに戻る
+    break; // 通信終了
+}
+*/
