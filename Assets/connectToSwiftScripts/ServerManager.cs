@@ -8,218 +8,148 @@ using UnityEngine;
 
 public class ServerManager : MonoBehaviour
 {
-    private TcpListener server;
-    private Thread serverThread;
-    private CancellationTokenSource cancellationTokenSource;
+    // --- サーバー関連 ---
+    private TcpListener server;                        // クライアントからの接続を待ち受けるサーバー
+    private Thread serverThread;                       // サーバーの待受処理を実行する別スレッド
+    private CancellationTokenSource cancellationTokenSource; // スレッド停止用のトークン
 
-    public string ip = "10.202.253.246"; //192.168.3.13, 10.202.227.43, 10.202.253.246
-    public int port = 8080;
+    // --- ネットワーク設定 ---
+    public string ip = "10.202.253.246"; // サーバーのIPアドレス（例: 教室LAN内など）
+    public int port = 8080;              // ポート番号（クライアントと一致させる）
 
-    public bool isEnd = false;
+    public bool isEnd = false;           // 終了フラグ（未使用だが将来的に停止制御用）
 
-    public GameManager gameManager;
+    // --- 他コンポーネント参照 ---
+    public GameManager gameManager;      // ゲーム進行制御用マネージャへの参照
 
-    // メインスレッドで実行するアクションを保持するキュー
+    // --- メインスレッド実行用キュー ---
+    // Unityではメインスレッド以外からUIやGameObjectを操作できないため、
+    // スレッドで受け取ったデータはここに登録し、Update()で処理する。
     private Queue<Action> mainThreadActions = new Queue<Action>();
 
+    // ------------------------------------------------
+    // サーバーの起動処理
+    // ------------------------------------------------
     public void StartServer()
-    {   
+    {
+        // 指定されたIPとポートでサーバーを初期化
         server = new TcpListener(IPAddress.Parse(ip), port);
+
+        // 停止用トークンを作成（後でStop()でキャンセルできる）
         cancellationTokenSource = new CancellationTokenSource();
+
+        // 別スレッドでクライアント待受を開始
         serverThread = new Thread(() => ListenForClients(cancellationTokenSource.Token));
         serverThread.Start();
+
         Debug.Log("Server started, waiting for connection...");
     }
 
+    // ------------------------------------------------
+    // 毎フレーム呼ばれる処理
+    // ------------------------------------------------
     public void Update()
     {
-        // キューに溜まったアクションを実行
-        while(mainThreadActions.Count > 0)
+        // メインスレッドで安全に実行する必要がある処理を順に実行
+        while (mainThreadActions.Count > 0)
         {
             mainThreadActions.Dequeue().Invoke();
         }
 
-        //if(Input.GetKeyDown(KeyCode.Return)) Stop();
+        // ※開発時デバッグ用（手動停止したいとき用）
+        // if(Input.GetKeyDown(KeyCode.Return)) Stop();
     }
 
+    // ------------------------------------------------
+    // クライアントの接続を待ち受ける（別スレッドで動作）
+    // ------------------------------------------------
     private void ListenForClients(CancellationToken cancellationToken)
     {
         server.Start();
-        while(!cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                if(server.Pending())
+                // 接続要求があるか確認
+                if (server.Pending())
                 {
+                    // クライアントからの接続を受け付ける
                     TcpClient client = server.AcceptTcpClient();
+
+                    // クライアントごとの処理を実行
                     HandleClient(client);
                 }
                 else
                 {
+                    // 接続要求がない場合、CPU負荷軽減のため少し待つ
                     Thread.Sleep(100);
                 }
             }
-            catch(SocketException e)
+            catch (SocketException e)
             {
-                Debug.LogError($"Socket Exceptions: {e.Message}");
+                Debug.LogError($"Socket Exception: {e.Message}");
             }
         }
     }
 
-    /*
+    // ------------------------------------------------
+    // クライアントからの通信を処理する
+    // ------------------------------------------------
     private void HandleClient(TcpClient client)
     {
+        // usingで自動的にNetworkStreamを破棄
         using (NetworkStream stream = client.GetStream())
         {
-            byte[] buffer = new byte[1024];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-            if(bytesRead > 0)
-            {
-                string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                Debug.Log($"Received message: {message}");
-
-                if(message == "-5")
-                {
-                    //メインスレッドに戻るアクションをキューに追加->いらないかも
-                    mainThreadActions.Enqueue(() =>
-                    {
-                        gameManager.TimerStart(); //タイマースタート
-                    });
-                }
-                else if(message == "-6")
-                {
-                    gameManager.Blotting(); //吸い取り中
-                }
-                else if(message == "-10")
-                {
-                    isEnd = true;
-                    client.Close();
-                    gameManager.gameClear(); //ゲームクリア
-                }
-                else if(int.TryParse(message, out int s))
-                {
-                    gameManager.Subjugate(s); //お化けを1体討伐
-                }
-
-                // クライアントに応答を送信
-                byte[] response = Encoding.UTF8.GetBytes("Unity is received message!");
-                stream.Write(response, 0, response.Length);
-
-                if(!isEnd) StartServer();
-            }
-        }
-
-        // 通信後にクライアントの接続を閉じる
-        client.Close();
-    }
-    */
-
-/*
-    private void HandleClient(TcpClient client)
-    {
-        using (NetworkStream stream = client.GetStream())
-        {
-            while (true) // クライアントとの通信を繰り返す
+            while (true) // クライアントが切断するまで通信を続ける
             {
                 byte[] buffer = new byte[1024];
                 int bytesRead = stream.Read(buffer, 0, buffer.Length);
 
+                // クライアントからのメッセージを受信
                 if (bytesRead > 0)
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     Debug.Log($"Received message: {message}");
-                    
+
+                    // --- 受信したメッセージ内容で処理を分岐 ---
                     if (message == "-5")
                     {
+                        // 「-5」はゲームスタート信号として扱う
                         mainThreadActions.Enqueue(() => gameManager.TimerStart());
                     }
-                    else if (message == "-6")
-                    {
-                        gameManager.Blotting();
-                    }
-                    else if (message == "-10")
-                    {
-                        //isEnd = true;
-                        //client.Close(); ????
-                        gameManager.gameClear();
-                        break; // 通信終了
-                    }
                     else if (int.TryParse(message, out int s))
                     {
-                        gameManager.Subjugate(s);
+                        // 数値を受け取った場合は「討伐数更新」として扱う
+                        mainThreadActions.Enqueue(() => gameManager.Subjugate(s));
                     }
 
-                    byte[] response = Encoding.UTF8.GetBytes("Unity received your message!");
-                    stream.Write(response, 0, response.Length);
-                    //if(!isEnd) StartServer();
-                }
-                else
-                {
-                    // クライアントが接続を閉じた場合
-                    break;
-                }
-            }
-        }
-    }
-*/
-    
-
-    private void HandleClient(TcpClient client)
-    {
-        using (NetworkStream stream = client.GetStream())
-        {
-            while (true) // クライアントとの通信を繰り返す
-            {
-                byte[] buffer = new byte[1024];
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-                if (bytesRead > 0)
-                {
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Debug.Log($"Received message: {message}");
-
-                    if (message == "-5")
-                    {
-                        mainThreadActions.Enqueue(() => gameManager.TimerStart()); // メインスレッドに戻る
-                    }
-                    else if (int.TryParse(message, out int s))
-                    {
-                        mainThreadActions.Enqueue(() => gameManager.Subjugate(s)); // メインスレッドに戻る
-                    }
-
+                    // クライアントへ応答を返す
                     byte[] response = Encoding.UTF8.GetBytes("Unity received your message!");
                     stream.Write(response, 0, response.Length);
                 }
                 else
                 {
-                    // クライアントが接続を閉じた場合
+                    // クライアントが接続を閉じた場合、通信終了
                     break;
                 }
             }
         }
     }
 
+    // ------------------------------------------------
+    // サーバーを停止する処理
+    // ------------------------------------------------
     public void Stop()
     {
-        cancellationTokenSource.Cancel(); //スレッドに停止を指示
+        // スレッドに停止を指示
+        cancellationTokenSource.Cancel();
+
+        // サーバーソケットを停止
         server.Stop();
-        serverThread.Join(); //サーバースレッドが終了するのを待つ
+
+        // サーバースレッドの終了を待機（安全に終了させる）
+        serverThread.Join();
+
         Debug.Log("Server stopped");
     }
 }
-
-/*
-else if (message == "-6")
-{
-    mainThreadActions.Enqueue(() => gameManager.Blotting()); // メインスレッドに戻る
-}
-*/
-
-/*
-else if (message == "-10")
-{
-    mainThreadActions.Enqueue(() => gameManager.gameClear()); // メインスレッドに戻る
-    break; // 通信終了
-}
-*/
